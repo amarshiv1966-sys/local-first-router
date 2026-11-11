@@ -4,6 +4,7 @@ Run (from src/llm_project):
     uv run uvicorn gateway.app:app --port 8000
 
 Endpoints:
+    GET  /                      demo page: ask a question, see where it was answered and why
     POST /v1/chat/completions   OpenAI-style request -> answer + routing info
     GET  /stats                 totals: % local, cloud spend, money saved
     GET  /health                is the server up?
@@ -18,6 +19,7 @@ import time
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 # ---------- settings ----------
@@ -166,6 +168,11 @@ def stats():
         "saved_usd_estimate": round(sum(r.get("saved_usd", 0) for r in rows if not r.get("cached")), 6),
         "rule": {"cap_tokens": CAP, "min_logprob": MIN_LP},
     }
+
+
+@app.get("/")
+def demo_page():
+    return FileResponse(Path(__file__).parent / "static" / "index.html")
 
 
 @app.get("/health")
