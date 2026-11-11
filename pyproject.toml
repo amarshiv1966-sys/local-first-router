@@ -1,0 +1,15 @@
+[project]
+name = "local-first-router"
+version = "0.1.0"
+description = "A small local LLM that hands off to a cloud model when it's likely wrong"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "mlx-lm",
+    "datasets",
+    "math-verify[antlr4_13_2]",
+    "openai",
+    "fastapi",
+    "uvicorn",
+    "matplotlib",
+]

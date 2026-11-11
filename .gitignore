@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.py[oc]
+.venv/
+
+# gateway runtime files (cache + request logs)
+logs/
+
+# secrets
+.env
+
+# macOS
+.DS_Store
