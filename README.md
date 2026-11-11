@@ -4,7 +4,7 @@ A 4B model answers on my laptop. When it's likely to be wrong, the question goes
 
 Built on an M5 MacBook Air (16 GB) with [MLX](https://github.com/ml-explore/mlx). Cloud model: `gpt-oss-120b` on Groq.
 
-![Cost vs accuracy](results/router_curve.png)
+![Cost vs accuracy](results/math/router_curve.png)
 
 ## Results
 
@@ -85,11 +85,11 @@ uv sync
 export GROQ_API_KEY="your-key"
 
 # reproduce the results
-uv run python router/stage1_baseline.py local --n 500
-uv run python router/stage1_baseline.py cloud --n 500
-uv run python router/stage2_router.py score
-uv run python router/stage2_router.py report
-uv run python router/fit_config.py
+uv run python router/stage1_baseline.py local --task math --n 500
+uv run python router/stage1_baseline.py cloud --task math --n 500
+uv run python router/stage2_router.py score  --task math
+uv run python router/stage2_router.py report --task math
+uv run python router/fit_config.py --task math
 
 # start the gateway, then open http://127.0.0.1:8000 for the demo page
 # (or /docs to try the raw API)
@@ -98,12 +98,13 @@ uv run uvicorn gateway.app:app --port 8000
 
 | File | What it does |
 | --- | --- |
-| `router/stage1_baseline.py` | Runs both models on MATH-500 and checks answers |
+| `router/tasks.py` | Question types: how each is loaded, prompted and checked (math, MMLU-Pro, TriviaQA) |
+| `router/stage1_baseline.py` | Runs both models on a task and checks answers |
 | `router/stage2_router.py` | Scores confidence signals; AUROC, cost–accuracy curves, held-out test |
 | `router/fit_config.py` | Picks the gateway's rule on a training split, reports precision/recall on the test split |
 | `gateway/app.py` | The API server |
 | `gateway/static/index.html` | Demo page: ask a question, see where it was answered and why |
-| `results/` | Raw outputs, signals, chosen rule, chart |
+| `results/<task>/` | Raw outputs, signals, chosen rule, chart, per question type |
 
 ## Limitations
 

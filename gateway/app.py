@@ -32,7 +32,7 @@ MAX_TOKENS = 2048
 DEFAULT_SYSTEM = "Solve the math problem. Think step by step, then put only the final answer in \\boxed{}."
 
 ROOT = Path(__file__).resolve().parent.parent           # src/llm_project
-CONFIG = json.loads((ROOT / "results" / "router_config.json").read_text())
+CONFIG = json.loads((ROOT / "results" / "math" / "router_config.json").read_text())   # math-only rule for now
 CAP = CONFIG["cap_tokens"]
 MIN_LP = CONFIG["min_logprob"]                           # None = no probability check
 LOG_DIR = ROOT / "logs"
