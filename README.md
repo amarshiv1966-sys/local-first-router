@@ -58,7 +58,7 @@ flowchart LR
     H --> A
 ```
 
-The gateway (`gateway/app.py`) is a FastAPI server with an OpenAI-style endpoint:
+The gateway (`gateway/app.py`) is a FastAPI server with an OpenAI-style endpoint and a small demo page:
 
 - **Local first:** runs the 4B model with MLX and watches each token as it's generated.
 - **Early stop:** if the answer passes the token cap, it stops and hands off instead of waiting.
@@ -91,7 +91,8 @@ uv run python router/stage2_router.py score
 uv run python router/stage2_router.py report
 uv run python router/fit_config.py
 
-# start the gateway, then open http://127.0.0.1:8000/docs
+# start the gateway, then open http://127.0.0.1:8000 for the demo page
+# (or /docs to try the raw API)
 uv run uvicorn gateway.app:app --port 8000
 ```
 
@@ -101,6 +102,7 @@ uv run uvicorn gateway.app:app --port 8000
 | `router/stage2_router.py` | Scores confidence signals; AUROC, cost–accuracy curves, held-out test |
 | `router/fit_config.py` | Picks the gateway's rule on a training split, reports precision/recall on the test split |
 | `gateway/app.py` | The API server |
+| `gateway/static/index.html` | Demo page: ask a question, see where it was answered and why |
 | `results/` | Raw outputs, signals, chosen rule, chart |
 
 ## Limitations
