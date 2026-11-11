@@ -10,14 +10,15 @@ Two things trade off against each other:
 For each cap, we find the best threshold, then show the whole trade-off table.
 
 Usage:
-    uv run python router/fit_config.py            # picks the balanced option
-    uv run python router/fit_config.py --cap 600  # or choose a cap yourself from the table
+    uv run python router/fit_config.py --task math            # picks the balanced option
+    uv run python router/fit_config.py --task math --cap 600  # or choose a cap from the table
 """
 
 import argparse
 import json
 
-from stage2_router import MAX_TOKENS, RESULTS, TOLERANCE, is_test, load_rows
+import stage2_router
+from stage2_router import MAX_TOKENS, TOLERANCE, is_test, load_rows
 
 CAPS = list(range(300, MAX_TOKENS, 100)) + [MAX_TOKENS]
 
@@ -56,7 +57,10 @@ def best_threshold(rows, cap, local, cloud, target):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--cap", type=int, help="pick this cap instead of the balanced one")
+    ap.add_argument("--task", default="math")
     args = ap.parse_args()
+    stage2_router.set_task(args.task)
+    RESULTS = stage2_router.RESULTS
 
     local, cloud, sigs = load_rows("local"), load_rows("cloud"), load_rows("signals")
     ids = [k for k in local if k in cloud and k in sigs]

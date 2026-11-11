@@ -1,8 +1,8 @@
 """Stage 2: can the local model tell when its own answer is probably wrong?
 
 Usage (run Stage 1 first, for both local and cloud):
-    uv run python router/stage2_router.py score     # reads token probabilities, ~1-3 min
-    uv run python router/stage2_router.py report    # tables + results/router_curve.png
+    uv run python router/stage2_router.py score  --task math   # reads token probabilities
+    uv run python router/stage2_router.py report --task math   # tables + results/math/router_curve.png
 
 `score` does NOT generate answers again. It feeds each saved answer back into the
 model in ONE forward pass and reads how probable the model found each token it wrote.
@@ -15,13 +15,17 @@ import json
 import random
 from pathlib import Path
 
-from datasets import load_dataset
-
 LOCAL_MODEL = "mlx-community/Qwen3.5-4B-MLX-4bit"
-RESULTS = Path("results")
-SYSTEM = "Solve the math problem. Think step by step, then put only the final answer in \\boxed{}."
+RESULTS = Path("results/math")      # changed by set_task()
+TASK = "math"
 MAX_TOKENS = 2048
 TOLERANCE = 0.01   # "as good as cloud" = within 1 percentage point of cloud-only accuracy
+
+
+def set_task(task):
+    """Point every function in this file at results/<task>/."""
+    global RESULTS, TASK
+    RESULTS, TASK = Path("results") / task, task
 
 
 def load_rows(name):
@@ -38,8 +42,7 @@ def score():
 
     model, tokenizer = load(LOCAL_MODEL)
     local = load_rows("local")
-    problems = {q["unique_id"]: q["problem"]
-                for q in load_dataset("HuggingFaceH4/MATH-500", split="test")}
+    older = None                                         # early math rows didn't save their prompt
 
     out_path = RESULTS / "signals.jsonl"
     done = set(load_rows("signals")) if out_path.exists() else set()
@@ -47,8 +50,12 @@ def score():
     for i, (qid, row) in enumerate(local.items()):
         if qid in done:
             continue
-        messages = [{"role": "system", "content": SYSTEM},
-                    {"role": "user", "content": problems[qid]}]
+        messages = row.get("messages")
+        if messages is None:
+            if older is None:
+                from tasks import TASKS
+                older = {it["id"]: TASKS[TASK]["messages"](it) for it in TASKS[TASK]["load"](10**6)}
+            messages = older[qid]
         prompt = tokenizer.apply_chat_template(
             messages, add_generation_prompt=True, tokenize=False, enable_thinking=False)
         prompt_ids = tokenizer.encode(prompt)
@@ -155,7 +162,7 @@ def report():
     plt.axhline(100 * (target + TOLERANCE), color="gray", linewidth=0.8)
     plt.xlabel("% of questions handed off to the cloud (≈ cost)")
     plt.ylabel("accuracy (%)")
-    plt.title("Local-first routing on MATH-500")
+    plt.title(f"Local-first routing: {TASK}")
     plt.legend()
     plt.grid(alpha=0.3)
     plt.savefig(RESULTS / "router_curve.png", dpi=150, bbox_inches="tight")
@@ -223,7 +230,9 @@ def split_report():
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("step", choices=["score", "report"])
+    ap.add_argument("--task", default="math")
     args = ap.parse_args()
+    set_task(args.task)
     if args.step == "score":
         score()
     else:
