@@ -87,8 +87,12 @@ def run_cloud(task, items):
                     model=CLOUD_MODEL, messages=messages, temperature=0, max_tokens=MAX_TOKENS,
                     extra_body={"reasoning_effort": "low"})   # fewer tokens: free tier is ~200K/day
                 break
-            except RateLimitError:
-                print("rate limited, waiting 60s ...")
+            except RateLimitError as e:
+                if "per day" in str(e).lower() or "tpd" in str(e).lower():
+                    print("daily limit reached. Everything so far is saved: rerun this same command "
+                          "tomorrow and it continues where it stopped.")
+                    raise SystemExit(0)
+                print("rate limited (per-minute), waiting 60s ...")
                 time.sleep(60)
         secs = time.time() - t0
         text = resp.choices[0].message.content or ""
