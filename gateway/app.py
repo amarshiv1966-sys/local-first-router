@@ -44,9 +44,17 @@ SYSTEMS = {
     "general": "You are a helpful assistant. Answer clearly and concisely.",
 }
 
-CONFIG = json.loads((ROOT / "results" / "math" / "router_config.json").read_text())   # math-only rule for now
-CAP = CONFIG["cap_tokens"]
-MIN_LP = CONFIG["min_logprob"]                           # None = no probability check
+# one routing rule per question type, each fitted by router/fit_config.py --task <type>
+RULES = {t: json.loads((ROOT / "results" / t / "router_config.json").read_text())
+         for t in ["math", "mmlu", "trivia", "code"]
+         if (ROOT / "results" / t / "router_config.json").exists()}
+FALLBACK_RULE = "math"                                    # for "general" questions
+
+# question-type classifier from router/classify.py (used when the caller doesn't say the type)
+import pickle                                             # noqa: E402
+from classify import MIN_CONFIDENCE                       # noqa: E402
+CLF_PATH = ROOT / "results" / "classifier.pkl"
+classifier = pickle.loads(CLF_PATH.read_bytes()) if CLF_PATH.exists() else None
 LOG_DIR = ROOT / "logs"
 LOG_DIR.mkdir(exist_ok=True)
 
@@ -78,12 +86,23 @@ class Message(BaseModel):
 class ChatRequest(BaseModel):
     messages: list[Message]
     model: str = "auto"                # "auto" = route; "local" or "cloud" = force one side
-    task: str = "math"                 # which instruction to add: math, mmlu, trivia, code, general
+    task: str = "auto"                 # math, mmlu, trivia, code, general, or "auto" = guess it
 
 
 # ---------- the two sides ----------
 
-def run_local(messages):
+def detect_type(question):
+    """Returns (type, how it was decided)."""
+    if classifier is None:
+        return "general", "no classifier trained"
+    p = classifier.predict_proba([question])[0]
+    best = classifier.classes_[p.argmax()]
+    if p.max() < MIN_CONFIDENCE:
+        return "general", f"unsure ({best} {p.max():.0%})"
+    return best, f"guessed {p.max():.0%}"
+
+
+def run_local(messages, cap):
     """Generate locally, token by token. Returns (text, tokens, worst_logprob, gave_up)."""
     prompt = tokenizer.apply_chat_template(messages, add_generation_prompt=True,
                                            tokenize=False, enable_thinking=False)
@@ -93,7 +112,7 @@ def run_local(messages):
             text += r.text
             n += 1
             worst = min(worst, r.logprobs[r.token].item())     # this token's log-probability
-            if n > CAP:                                         # early stop: probably lost
+            if n > cap:                                         # early stop: probably lost
                 return text, n, worst, True
     return text, n, worst, False
 
@@ -112,8 +131,14 @@ def run_cloud(messages):
 @app.post("/v1/chat/completions")
 def chat(req: ChatRequest):
     messages = [m.model_dump() for m in req.messages]
+    if req.task == "auto":
+        task, how = detect_type(messages[-1]["content"])
+    else:
+        task, how = (req.task if req.task in SYSTEMS else "general"), "given"
     if messages[0]["role"] != "system":
-        messages.insert(0, {"role": "system", "content": SYSTEMS.get(req.task, SYSTEMS["general"])})
+        messages.insert(0, {"role": "system", "content": SYSTEMS[task]})
+    rule = RULES.get(task, RULES[FALLBACK_RULE])
+    cap, min_lp = rule["cap_tokens"], rule["min_logprob"]      # min_lp None = no probability check
 
     key = hashlib.sha256(json.dumps([req.model, messages]).encode()).hexdigest()
     with db_lock:
@@ -125,18 +150,18 @@ def chat(req: ChatRequest):
         return out
 
     t0 = time.time()
-    info = {"cached": False, "local_tokens": 0, "cost_usd": 0.0}
+    info = {"cached": False, "task": task, "task_source": how, "local_tokens": 0, "cost_usd": 0.0}
 
     use_cloud = req.model == "cloud"
     if not use_cloud:
-        text, n, worst, gave_up = run_local(messages)
+        text, n, worst, gave_up = run_local(messages, cap)
         info.update(local_tokens=n, worst_logprob=round(worst, 3))
         if req.model == "local":
             info.update(route="local", reason="forced local")
         elif gave_up:
-            use_cloud, info["reason"] = True, f"local answer passed {CAP} tokens"
-        elif MIN_LP is not None and worst < MIN_LP:
-            use_cloud, info["reason"] = True, f"low confidence (worst token {worst:.2f} < {MIN_LP:.2f})"
+            use_cloud, info["reason"] = True, f"local answer passed {cap} tokens"
+        elif min_lp is not None and worst < min_lp:
+            use_cloud, info["reason"] = True, f"low confidence (worst token {worst:.2f} < {min_lp:.2f})"
         else:
             info.update(route="local", reason="confident")
 
@@ -179,7 +204,7 @@ def stats():
         "cache_hits": sum(r.get("cached", False) for r in rows),
         "cloud_spend_usd": round(sum(r.get("cost_usd", 0) for r in rows), 6),
         "saved_usd_estimate": round(sum(r.get("saved_usd", 0) for r in rows if not r.get("cached")), 6),
-        "rule": {"cap_tokens": CAP, "min_logprob": MIN_LP},
+        "rules": {t: {"cap_tokens": r["cap_tokens"], "min_logprob": r["min_logprob"]} for t, r in RULES.items()},
     }
 
 

@@ -1,0 +1,10 @@
+{
+  "cap_tokens": 1100,
+  "min_logprob": null,
+  "test_precision": 0.68,
+  "test_recall": 0.68,
+  "test_accuracy": 0.7676056338028169,
+  "test_handoff_rate": 0.352112676056338,
+  "test_local_time_saved": 0.20053731165261102,
+  "n_test": 142
+}
