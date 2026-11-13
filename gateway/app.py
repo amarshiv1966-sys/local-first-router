@@ -50,17 +50,16 @@ RULES = {t: json.loads((ROOT / "results" / t / "router_config.json").read_text()
          if (ROOT / "results" / t / "router_config.json").exists()}
 FALLBACK_RULE = "math"                                    # for "general" questions
 
-# question-type classifier from router/classify.py (used when the caller doesn't say the type)
-import pickle                                             # noqa: E402
-from classify import MIN_CONFIDENCE                       # noqa: E402
-CLF_PATH = ROOT / "results" / "classifier.pkl"
-classifier = pickle.loads(CLF_PATH.read_bytes()) if CLF_PATH.exists() else None
+# question-type detection: ask the local model (router/realistic.py: 40/40 on hand-written
+# questions, vs 21/40 for the TF-IDF classifier, which learned dataset formatting)
+from realistic import LLM_PROMPT                          # noqa: E402
+TYPES = ["math", "mmlu", "trivia", "code"]
 LOG_DIR = ROOT / "logs"
 LOG_DIR.mkdir(exist_ok=True)
 
 # ---------- startup: load the local model once ----------
 
-from mlx_lm import load, stream_generate                 # noqa: E402
+from mlx_lm import generate, load, stream_generate                 # noqa: E402
 from mlx_lm.sample_utils import make_sampler              # noqa: E402
 from openai import OpenAI                                 # noqa: E402
 
@@ -92,14 +91,14 @@ class ChatRequest(BaseModel):
 # ---------- the two sides ----------
 
 def detect_type(question):
-    """Returns (type, how it was decided)."""
-    if classifier is None:
-        return "general", "no classifier trained"
-    p = classifier.predict_proba([question])[0]
-    best = classifier.classes_[p.argmax()]
-    if p.max() < MIN_CONFIDENCE:
-        return "general", f"unsure ({best} {p.max():.0%})"
-    return best, f"guessed {p.max():.0%}"
+    """Ask the local model which type this is. Returns (type, how it was decided)."""
+    prompt = tokenizer.apply_chat_template(
+        [{"role": "system", "content": LLM_PROMPT}, {"role": "user", "content": question}],
+        add_generation_prompt=True, tokenize=False, enable_thinking=False)
+    with local_lock:
+        out = generate(model, tokenizer, prompt, max_tokens=5, sampler=sampler).strip().lower()
+    found = next((t for t in TYPES if t in out), None)
+    return (found, "detected by local model") if found else ("general", f"unclear ({out!r})")
 
 
 def run_local(messages, cap):
