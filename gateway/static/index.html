@@ -51,11 +51,12 @@
 <main>
   <h1>Local-first router</h1>
   <p class="sub">A 4B model answers on this laptop. If it looks lost or unsure, the question goes to a 120B cloud model.
-    The routing rule was tuned on math; for other types it's still being measured.</p>
+    Each question type has its own routing rule, measured on held-out questions.</p>
 
   <textarea id="q" placeholder="Ask a math question, e.g. What is the sum of the first 50 odd numbers?"></textarea>
   <div class="row">
     <select id="task" aria-label="Question type">
+      <option value="auto">Auto-detect type</option>
       <option value="math">Math</option>
       <option value="code">Code</option>
       <option value="mmlu">Multiple choice</option>
@@ -133,6 +134,7 @@ async function ask() {
       <div class="card">
         <span class="badge ${r.route}">${r.route === "local" ? "Answered locally" : "Handed off to cloud"}</span>
         <span class="reason">${esc(r.reason || "")}${r.cached ? " · from cache" : ""}</span>
+        <div class="hint" style="margin-top:6px">Type: <b>${esc(r.task || "?")}</b> (${esc(r.task_source || "")})</div>
         <div class="answer" id="answer">${withCode(answer)}</div>
         <dl>
           ${cell("Time", r.cached ? ((performance.now() - t0) / 1000).toFixed(2) + " s" : r.latency_s + " s")}
