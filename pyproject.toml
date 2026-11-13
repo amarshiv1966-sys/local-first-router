@@ -12,5 +12,4 @@ dependencies = [
     "fastapi",
     "uvicorn",
     "matplotlib",
-    "scikit-learn>=1.9.1",
 ]
