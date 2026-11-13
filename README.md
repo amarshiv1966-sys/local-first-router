@@ -45,6 +45,30 @@ Rule: hand off if the answer passes **600 tokens** (checked while generating, so
 
 **The honest summary:** simple signals catch every local mistake, but only about 1 in 3 handoffs is necessary. The rules are cautious, not precise. Raising precision while keeping recall near 100% is the goal of the next stages.
 
+## Results across question types
+
+Same two models, four kinds of questions, every answer checked automatically.
+
+| Type | Questions | Local | Cloud | Perfect router | Local time |
+| --- | --- | --- | --- | --- | --- |
+| Math (MATH-500) | 500 | 78.2% | 93.6% | 95.4% | 42 s |
+| Knowledge (MMLU-Pro) | 300 | 66.3% | 78.7% | 83.0% | 35 s |
+| Facts (TriviaQA) | 299 | 44.8% | 73.6% | 76.3% | 3.6 s |
+| Code (HumanEval) | 164 | 81.7% | 95.7% | 97.0% | 6.2 s |
+
+Code answers are run against HumanEval's unit tests in a sandbox (`router/sandbox.py`).
+
+**How well each confidence signal spots a wrong local answer (AUROC):**
+
+| Signal | Math | MMLU-Pro | Facts | Code |
+| --- | --- | --- | --- | --- |
+| Answer length | **0.94** | **0.81** | 0.62 | 0.66 |
+| Lowest token probability | 0.87 | 0.75 | **0.77** | 0.71 |
+| Probability near the end | 0.65 | 0.65 | 0.67 | **0.76** |
+| Answers that hit the 2,048-token limit | 21% | 20% | 4% | 2% |
+
+**What this shows:** answer length is a strong warning sign where the model rambles when it's lost (math, MMLU-Pro). For facts and code, wrong answers are as short and confident as right ones, and every simple signal is weak. The 4B model is also far worse at facts (45%) than at code (82%): facts live in parameters, and a 4B model holds far fewer than a 120B one.
+
 ## How it works
 
 ```mermaid
@@ -98,7 +122,8 @@ uv run uvicorn gateway.app:app --port 8000
 
 | File | What it does |
 | --- | --- |
-| `router/tasks.py` | Question types: how each is loaded, prompted and checked (math, MMLU-Pro, TriviaQA) |
+| `router/tasks.py` | Question types: how each is loaded, prompted and checked (math, MMLU-Pro, TriviaQA, code) |
+| `router/sandbox.py` | Runs model-written code against unit tests, with a timeout and resource limits (optional Docker mode) |
 | `router/stage1_baseline.py` | Runs both models on a task and checks answers |
 | `router/stage2_router.py` | Scores confidence signals; AUROC, cost–accuracy curves, held-out test |
 | `router/fit_config.py` | Picks the gateway's rule on a training split, reports precision/recall on the test split |
@@ -113,6 +138,8 @@ uv run uvicorn gateway.app:app --port 8000
 - **Handoffs improve the odds, not certainty.** The cloud model is wrong on about 6% of these problems too.
 - **One test split of 236 questions.** Small differences between rules are within noise.
 - **Time savings from early stop are estimated** from token counts, assuming time grows evenly with tokens.
+- **The default code sandbox is not a security boundary.** It uses a separate process, a timeout and a throwaway folder; on macOS the memory limit isn't enforced. `SANDBOX=docker` runs code in a container with no network, a read-only file system and a memory limit.
+- **The gateway's routing rule was fitted on math.** Thresholds for the other question types are measured but not yet used live.
 
 ## Next
 
