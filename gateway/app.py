@@ -53,6 +53,7 @@ FALLBACK_RULE = "math"                                    # for "general" questi
 # question-type detection: ask the local model (router/realistic.py: 40/40 on hand-written
 # questions, vs 21/40 for the TF-IDF classifier, which learned dataset formatting)
 from realistic import LLM_PROMPT                          # noqa: E402
+from code_examples import check_examples                  # noqa: E402
 TYPES = ["math", "mmlu", "trivia", "code"]
 LOG_DIR = ROOT / "logs"
 LOG_DIR.mkdir(exist_ok=True)
@@ -153,10 +154,22 @@ def chat(req: ChatRequest):
 
     use_cloud = req.model == "cloud"
     if not use_cloud:
-        text, n, worst, gave_up = run_local(messages, cap)
+        # code: no early stop, the answer gets run against the question's own examples instead
+        examples_ok = None
+        if task == "code":
+            text, n, worst, _ = run_local(messages, MAX_TOKENS)
+            gave_up = n > cap
+            if req.model != "local":
+                examples_ok = check_examples(text, messages[-1]["content"])
+        else:
+            text, n, worst, gave_up = run_local(messages, cap)
         info.update(local_tokens=n, worst_logprob=round(worst, 3))
         if req.model == "local":
             info.update(route="local", reason="forced local")
+        elif examples_ok is False:
+            use_cloud, info["reason"] = True, "local code failed the examples in the question"
+        elif examples_ok is True:
+            info.update(route="local", reason="local code passed the examples in the question")
         elif gave_up:
             use_cloud, info["reason"] = True, f"local answer passed {cap} tokens"
         elif min_lp is not None and worst < min_lp:
