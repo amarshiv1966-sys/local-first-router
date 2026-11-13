@@ -14,6 +14,7 @@ import hashlib
 import json
 import os
 import sqlite3
+import sys
 import threading
 import time
 from pathlib import Path
@@ -29,9 +30,20 @@ CLOUD_MODEL = "openai/gpt-oss-120b"
 GROQ_URL = "https://api.groq.com/openai/v1"
 PRICE_IN, PRICE_OUT = 0.15, 0.60       # $ per 1M tokens, Groq gpt-oss-120b (Oct 2026 price page)
 MAX_TOKENS = 2048
-DEFAULT_SYSTEM = "Solve the math problem. Think step by step, then put only the final answer in \\boxed{}."
 
-ROOT = Path(__file__).resolve().parent.parent           # src/llm_project
+ROOT = Path(__file__).resolve().parent.parent           # the repo's top folder
+sys.path.insert(0, str(ROOT / "router"))
+from tasks import CODE_SYSTEM, MATH_SYSTEM, MMLU_SYSTEM, TRIVIA_SYSTEM   # noqa: E402
+
+# the instruction added for each question type (the same ones used in the evaluation)
+SYSTEMS = {
+    "math": MATH_SYSTEM,
+    "mmlu": MMLU_SYSTEM,
+    "trivia": TRIVIA_SYSTEM,
+    "code": CODE_SYSTEM,
+    "general": "You are a helpful assistant. Answer clearly and concisely.",
+}
+
 CONFIG = json.loads((ROOT / "results" / "math" / "router_config.json").read_text())   # math-only rule for now
 CAP = CONFIG["cap_tokens"]
 MIN_LP = CONFIG["min_logprob"]                           # None = no probability check
@@ -66,6 +78,7 @@ class Message(BaseModel):
 class ChatRequest(BaseModel):
     messages: list[Message]
     model: str = "auto"                # "auto" = route; "local" or "cloud" = force one side
+    task: str = "math"                 # which instruction to add: math, mmlu, trivia, code, general
 
 
 # ---------- the two sides ----------
@@ -100,7 +113,7 @@ def run_cloud(messages):
 def chat(req: ChatRequest):
     messages = [m.model_dump() for m in req.messages]
     if messages[0]["role"] != "system":
-        messages.insert(0, {"role": "system", "content": DEFAULT_SYSTEM})
+        messages.insert(0, {"role": "system", "content": SYSTEMS.get(req.task, SYSTEMS["general"])})
 
     key = hashlib.sha256(json.dumps([req.model, messages]).encode()).hexdigest()
     with db_lock:

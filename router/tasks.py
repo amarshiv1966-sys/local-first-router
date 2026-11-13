@@ -107,10 +107,44 @@ def trivia_check(text, item):
         re.search(rf"\b{re.escape(a)}\b", pred) for a in item["gold"] if a)
 
 
+# ---------- code: HumanEval, answers RUN against unit tests in a sandbox ----------
+
+CODE_SYSTEM = ("Complete the Python function. Reply with the complete function, including its "
+               "imports and signature, in a single ```python code block.")
+
+
+def code_load(n):
+    ds = load_dataset("openai/openai_humaneval", split="test").shuffle(seed=0)
+    return [dict(id=f"code/{q['task_id']}", group="code", question=q["prompt"],
+                 test=q["test"], entry_point=q["entry_point"])
+            for q in ds.select(range(min(n, len(ds))))]
+
+
+def code_messages(item):
+    return [{"role": "system", "content": CODE_SYSTEM},
+            {"role": "user", "content": item["question"]}]
+
+
+def extract_code(text):
+    """The last ```python block in the reply; if there's no block, the whole reply."""
+    blocks = re.findall(r"```(?:python|py)?\s*\n(.*?)```", text, flags=re.DOTALL)
+    return blocks[-1] if blocks else text
+
+
+def code_check(text, item):
+    from sandbox import run_code
+    code = extract_code(text)
+    if f"def {item['entry_point']}" not in code:      # model wrote only the body:
+        code = item["question"] + code                # put it under the given signature
+    program = f"{code}\n\n{item['test']}\n\ncheck({item['entry_point']})\n"
+    return run_code(program, timeout=10)["passed"]
+
+
 # ---------- registry ----------
 
 TASKS = {
     "math":   dict(load=math_load,   messages=math_messages,   check=math_check),
     "mmlu":   dict(load=mmlu_load,   messages=mmlu_messages,   check=mmlu_check),
     "trivia": dict(load=trivia_load, messages=trivia_messages, check=trivia_check),
+    "code":   dict(load=code_load,   messages=code_messages,   check=code_check),
 }

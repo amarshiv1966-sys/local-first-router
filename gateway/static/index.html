@@ -43,16 +43,25 @@
   dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
   h2 { font-size: 16px; margin: 0 0 4px; }
   .err { color: #b91c1c; }
+  pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 12px;
+        overflow-x: auto; white-space: pre; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
 </style>
 </head>
 <body>
 <main>
   <h1>Local-first router</h1>
   <p class="sub">A 4B model answers on this laptop. If it looks lost or unsure, the question goes to a 120B cloud model.
-    Tuned on math problems.</p>
+    The routing rule was tuned on math; for other types it's still being measured.</p>
 
   <textarea id="q" placeholder="Ask a math question, e.g. What is the sum of the first 50 odd numbers?"></textarea>
   <div class="row">
+    <select id="task" aria-label="Question type">
+      <option value="math">Math</option>
+      <option value="code">Code</option>
+      <option value="mmlu">Multiple choice</option>
+      <option value="trivia">Fact</option>
+      <option value="general">General</option>
+    </select>
     <select id="mode" aria-label="Routing mode">
       <option value="auto">Auto (router decides)</option>
       <option value="local">Force local</option>
@@ -75,6 +84,11 @@ const $ = id => document.getElementById(id);
 
 function esc(s) {
   return s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+}
+
+// ```python ... ``` blocks become <pre> boxes; everything else stays plain text
+function withCode(s) {
+  return esc(s).replace(/\n*```[a-zA-Z]*\n?([\s\S]*?)```\n*/g, (_, code) => `<pre><code>${code.trimEnd()}</code></pre>`);
 }
 
 function cell(label, value) {
@@ -108,7 +122,8 @@ async function ask() {
     const res = await fetch("/v1/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ model: $("mode").value, messages: [{ role: "user", content: text }] }),
+      body: JSON.stringify({ model: $("mode").value, task: $("task").value,
+                             messages: [{ role: "user", content: text }] }),
     });
     if (!res.ok) throw new Error(`server returned ${res.status}`);
     const out = await res.json();
@@ -118,7 +133,7 @@ async function ask() {
       <div class="card">
         <span class="badge ${r.route}">${r.route === "local" ? "Answered locally" : "Handed off to cloud"}</span>
         <span class="reason">${esc(r.reason || "")}${r.cached ? " · from cache" : ""}</span>
-        <div class="answer" id="answer">${esc(answer)}</div>
+        <div class="answer" id="answer">${withCode(answer)}</div>
         <dl>
           ${cell("Time", r.cached ? ((performance.now() - t0) / 1000).toFixed(2) + " s" : r.latency_s + " s")}
           ${cell("Local tokens", r.local_tokens ?? "-")}
