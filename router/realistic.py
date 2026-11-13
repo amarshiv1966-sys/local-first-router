@@ -1,56 +1,23 @@
-"""Which type detector works on questions written the way real people ask them?
+"""Can the local model tell what type a question is? Tested on questions written the way
+real people ask them, not in the benchmark datasets' formatting.
 
-Three detectors, scored on 40 hand-written questions (10 per type) that look nothing
-like the benchmark datasets:
+    TEST   40 plain questions (10 per type)
+    HARD   40 tricky ones: code words in math, numbers in facts, odd option labels...
 
-    old      classifier.pkl from classify.py (trained only on dataset questions)
-    retrain  the same classifier, plus a few plain-English examples (EXTRA below)
-    llm      ask the local 4B model to name the type, no training at all
-
-The EXTRA examples and the TEST questions are different questions, so "retrain" is
-never tested on what it was trained on.
+Earlier we also tried a TF-IDF + logistic regression classifier trained on the dataset
+questions. It scored 15/40 on TEST and 12/40 on HARD (it learned the datasets' formatting,
+not the meaning), so it was dropped. The local model: 40/40 and 32/40.
 
 Usage:
     uv run python router/realistic.py          # normal questions
     uv run python router/realistic.py --hard   # tricky ones
 """
 
-import pickle
+import sys
 import time
 from collections import Counter
-from pathlib import Path
 
-from classify import MIN_CONFIDENCE, TYPES, build_model, load_questions
-from stage2_router import is_test
-
-RESULTS = Path("results")
-
-# plain-English training examples, added to the dataset questions for "retrain"
-EXTRA = {
-    "math": ["What is 20% of 350?", "Find x if 5x - 3 = 17.", "What is the derivative of x^3?",
-             "How many ways can 4 people sit in a row?", "Simplify (x^2 - 9)/(x - 3).",
-             "What is the area of a circle with radius 7?", "Is 91 a prime number?",
-             "What is the sum of the angles in a hexagon?"],
-    "code": ["Write a Python function to check if a string is a palindrome.",
-             "How do I sort a dictionary by value in Python?",
-             "Fix this code: for i in range(10) print(i)",
-             "Write a function that returns the nth Fibonacci number.",
-             "How can I read a CSV file in Python?", "Implement binary search in Python.",
-             "Why does my Python loop never end?", "Write code to merge two sorted lists."],
-    "mmlu": ["Which gas do plants absorb? A. Oxygen B. Nitrogen C. Carbon dioxide D. Helium",
-             "Which is a mammal?\nA) Shark\nB) Dolphin\nC) Trout\nD) Octopus",
-             "The main cause of inflation is: (A) high demand (B) low prices (C) more savings (D) none",
-             "Pick the correct option: Newton's second law says A. F=ma B. E=mc^2 C. V=IR D. PV=nRT",
-             "Which organ makes insulin? A. Liver B. Pancreas C. Kidney D. Heart",
-             "Which of these is not a programming language? A. Python B. Java C. HTML D. C++",
-             "Choose one: the speed of sound is fastest in A) air B) water C) steel D) vacuum",
-             "Which country has the largest population? Options: A. India B. USA C. Brazil D. Japan"],
-    "trivia": ["Who wrote Pride and Prejudice?", "What is the capital of Canada?",
-               "Which planet is known as the red planet?", "Who discovered penicillin?",
-               "In which year did World War II end?", "What is the largest ocean on Earth?",
-               "Who was the first person to walk on the moon?", "What currency is used in Japan?"],
-}
-
+TYPES = ["math", "mmlu", "trivia", "code"]
 # the test: different questions, phrased like a real user
 TEST = {
     "math": ["What is 15% of 240?", "Solve for x: 3x + 7 = 22", "What's the integral of 2x dx?",
@@ -138,15 +105,6 @@ LLM_PROMPT = ("Classify the user's question into exactly one type:\n"
               "Reply with only the type name.")
 
 
-def classifier_detector(model):
-    labels = list(model.classes_)
-
-    def guess(q):
-        p = model.predict_proba([q])[0]
-        return labels[p.argmax()] if p.max() >= MIN_CONFIDENCE else "unsure"
-    return guess
-
-
 def llm_detector():
     from mlx_lm import generate, load
     from mlx_lm.sample_utils import make_sampler
@@ -176,29 +134,12 @@ def evaluate(name, guess, test):
         if g != t:
             print(f"    {t:7s} -> {g:7s} {q[:70]!r}")
     print()
-    return right
 
 
 def main():
-    old = pickle.loads((RESULTS / "classifier.pkl").read_bytes())
-
-    # retrain: same training split as classify.py, plus EXTRA
-    train = [r for r in load_questions() if not is_test(r["id"])]
-    X = [r["text"] for r in train] + [q for t in TYPES for q in EXTRA[t]]
-    y = [r["task"] for r in train] + [t for t in TYPES for _ in EXTRA[t]]
-    new = build_model().fit(X, y)
-
-    import sys
     test = HARD if "--hard" in sys.argv else TEST
     print(f"test set: {'HARD' if test is HARD else 'normal'} ({sum(map(len, test.values()))} questions)\n")
-    scores = {"old": evaluate("old classifier", classifier_detector(old), test),
-              "retrain": evaluate("retrained classifier", classifier_detector(new), test),
-              "llm": evaluate("local model asked", llm_detector(), test)}
-
-    with open(RESULTS / "classifier_retrained.pkl", "wb") as f:
-        pickle.dump(new, f)
-    print("scores (out of 40):", scores)
-    print(f"saved {RESULTS / 'classifier_retrained.pkl'}")
+    evaluate("local model asked", llm_detector(), test)
 
 
 if __name__ == "__main__":

@@ -1,10 +1,9 @@
-"""Does knowing the question type help the router? Three versions on the same test questions:
+"""Does knowing the question type help the router? Two versions on the same test questions:
 
     A  math's rule for every question             (what the gateway did before)
-    B  each type's own rule, using the TRUE type  (the best case)
-    C  each type's own rule, using the GUESSED type from classify.py (the realistic case)
+    B  each type's own rule, using the TRUE type
 
-Run fit_config.py for every task and classify.py first.
+Run fit_config.py for every task first. How well the type itself is detected: realistic.py.
 
 Usage:
     uv run python router/compare.py
@@ -13,11 +12,10 @@ Usage:
 import json
 from pathlib import Path
 
-from classify import MIN_CONFIDENCE, TYPES
 from stage2_router import is_test
 
 RESULTS = Path("results")
-FALLBACK = "math"       # rule used when the classifier is unsure
+TYPES = ["math", "mmlu", "trivia", "code"]
 
 
 def load(task, name):
@@ -43,30 +41,25 @@ def score(rows, rule_for):
 
 def main():
     rules = {t: json.loads((RESULTS / t / "router_config.json").read_text()) for t in TYPES}
-    guesses = json.loads((RESULTS / "classifier_test.json").read_text())
 
     rows = []
     for t in TYPES:
         local, cloud, sigs = load(t, "local"), load(t, "cloud"), load(t, "signals")
         for k in local:
             if k in cloud and k in sigs and is_test(k):
-                g = guesses[k]
                 rows.append(dict(task=t, local_ok=local[k]["correct"], cloud_ok=cloud[k]["correct"],
-                                 sig=sigs[k],
-                                 guess=g["pred"] if g["conf"] >= MIN_CONFIDENCE else FALLBACK))
+                                 sig=sigs[k]))
 
     versions = {
         "A  math rule for all":    lambda r: rules["math"],
         "B  own rule, true type":  lambda r: rules[r["task"]],
-        "C  own rule, guessed":    lambda r: rules[r["guess"]],
     }
 
     print("rules in use (cap tokens / worst log-prob):")
     for t in TYPES:
         lp = rules[t]["min_logprob"]
         print(f"  {t:7s} {rules[t]['cap_tokens']:5d} / {'none' if lp is None else f'{lp:.2f}'}")
-    wrong_type = sum(r["guess"] != r["task"] for r in rows)
-    print(f"\nclassifier picked the wrong rule for {wrong_type} of {len(rows)} test questions\n")
+    print()
 
     for scope in ["ALL"] + TYPES:
         part = rows if scope == "ALL" else [r for r in rows if r["task"] == scope]
