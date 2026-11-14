@@ -1,0 +1,9 @@
+{
+  "signal": "finetuned",
+  "threshold": 0.7058,
+  "n_test": 86,
+  "test_acc": 0.9651,
+  "test_prec": 0.4242,
+  "test_rec": 0.875,
+  "test_handoff": 0.3837
+}

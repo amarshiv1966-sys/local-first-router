@@ -50,6 +50,13 @@ RULES = {t: json.loads((ROOT / "results" / t / "router_config.json").read_text()
          if (ROOT / "results" / t / "router_config.json").exists()}
 FALLBACK_RULE = "math"                                    # for "general" questions
 
+# Stage 3 verifier rules (router/fit_verifier.py): after answering, the model is asked "is your
+# answer above correct?"; hand off if P(yes) < threshold. "general" borrows MMLU's rule.
+VRULES = {t: json.loads((ROOT / "results" / t / "verifier_rule.json").read_text())
+          for t in ["math", "mmlu", "trivia", "code"]
+          if (ROOT / "results" / t / "verifier_rule.json").exists()}
+VRULES.setdefault("general", VRULES.get("mmlu"))
+
 # question-type detection: ask the local model (router/realistic.py: 40/40 on hand-written
 # questions, vs 21/40 for the TF-IDF classifier, which learned dataset formatting)
 from realistic import LLM_PROMPT                          # noqa: E402
@@ -65,6 +72,14 @@ from mlx_lm.sample_utils import make_sampler              # noqa: E402
 from openai import OpenAI                                 # noqa: E402
 
 model, tokenizer = load(LOCAL_MODEL)
+
+# the verifier LoRA shares the model's weights: OFF while answering, ON only while judging
+from verifier_mlx import LORA_DIR, add_lora, p_correct, remember_scale, set_lora   # noqa: E402
+lora_layers = None
+if VRULES.get("math") and (LORA_DIR / "adapter_model.safetensors").exists():
+    lora_layers = add_lora(model)
+    remember_scale(lora_layers)
+    set_lora(lora_layers, False)
 sampler = make_sampler(temp=0.0)
 local_lock = threading.Lock()          # one GPU, one model: run one local generation at a time
 cloud = OpenAI(base_url=GROQ_URL, api_key=os.environ["GROQ_API_KEY"])
@@ -117,6 +132,16 @@ def run_local(messages, cap):
     return text, n, worst, False
 
 
+def verify(messages, answer, signal):
+    """P(the local answer is correct), from the fine-tuned ("finetuned") or plain ("base") model."""
+    with local_lock:
+        set_lora(lora_layers, signal == "finetuned")
+        try:
+            return p_correct(model, tokenizer, messages, answer)
+        finally:
+            set_lora(lora_layers, False)
+
+
 def run_cloud(messages):
     resp = cloud.chat.completions.create(
         model=CLOUD_MODEL, messages=messages, temperature=0, max_tokens=MAX_TOKENS,
@@ -155,11 +180,12 @@ def chat(req: ChatRequest):
     use_cloud = req.model == "cloud"
     if not use_cloud:
         # code: no early stop, the answer gets run against the question's own examples instead
-        examples_ok = None
-        if task == "code":
+        examples_ok, vrule = None, VRULES.get(task) if lora_layers else None
+        if task == "code" or vrule:
+            # no early stop: the finished answer gets checked (examples run, or the verifier asked)
             text, n, worst, _ = run_local(messages, MAX_TOKENS)
             gave_up = n > cap
-            if req.model != "local":
+            if task == "code" and req.model != "local":
                 examples_ok = check_examples(text, messages[-1]["content"])
         else:
             text, n, worst, gave_up = run_local(messages, cap)
@@ -170,6 +196,13 @@ def chat(req: ChatRequest):
             use_cloud, info["reason"] = True, "local code failed the examples in the question"
         elif examples_ok is True:
             info.update(route="local", reason="local code passed the examples in the question")
+        elif vrule:
+            p = verify(messages, text, vrule["signal"])
+            info["p_correct"] = round(p, 3)
+            if p < vrule["threshold"]:
+                use_cloud, info["reason"] = True, f"verifier: P(correct) {p:.2f} < {vrule['threshold']:.2f}"
+            else:
+                info.update(route="local", reason=f"verifier: P(correct) {p:.2f}")
         elif gave_up:
             use_cloud, info["reason"] = True, f"local answer passed {cap} tokens"
         elif min_lp is not None and worst < min_lp:
@@ -217,6 +250,8 @@ def stats():
         "cloud_spend_usd": round(sum(r.get("cost_usd", 0) for r in rows), 6),
         "saved_usd_estimate": round(sum(r.get("saved_usd", 0) for r in rows if not r.get("cached")), 6),
         "rules": {t: {"cap_tokens": r["cap_tokens"], "min_logprob": r["min_logprob"]} for t, r in RULES.items()},
+        "verifier_rules": {t: {"signal": r["signal"], "threshold": r["threshold"]}
+                           for t, r in VRULES.items() if r} if lora_layers else None,
     }
 
 

@@ -139,7 +139,7 @@ async function ask() {
         <dl>
           ${cell("Time", r.cached ? ((performance.now() - t0) / 1000).toFixed(2) + " s" : r.latency_s + " s")}
           ${cell("Local tokens", r.local_tokens ?? "-")}
-          ${cell("Worst token log-prob", r.worst_logprob ?? "-")}
+          ${r.p_correct != null ? cell("Verifier P(correct)", r.p_correct) : cell("Worst token log-prob", r.worst_logprob ?? "-")}
           ${cell("Cost", usd(r.cost_usd))}
           ${r.saved_usd ? cell("Saved vs cloud", usd(r.saved_usd)) : ""}
         </dl>
