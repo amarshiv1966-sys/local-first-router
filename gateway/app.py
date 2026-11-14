@@ -4,8 +4,8 @@ Run (from src/llm_project):
     uv run uvicorn gateway.app:app --port 8000
 
 Endpoints:
-    GET  /                      demo page: ask a question, see where it was answered and why
-    GET  /chat                  chat page: conversations with memory, every reply still routed
+    GET  /  (or /chat)          chat: conversations with memory, every reply routed
+    GET  /demo                  single-question demo with routing details
     POST /api/chat              send a message in a conversation (history is kept in SQLite)
     GET  /api/conversations     list conversations; /api/conversations/{id} for one (DELETE removes it)
     POST /v1/chat/completions   OpenAI-style request -> answer + routing info
@@ -208,7 +208,7 @@ def route(messages, task_req="auto", mode="auto"):
             info.update(route="local", reason="local code passed the examples in the question")
         elif vrule:
             p = verify(messages, text, vrule["signal"])
-            info["p_correct"] = round(p, 3)
+            info["p_correct"], info["threshold"] = round(p, 3), vrule["threshold"]
             if p < vrule["threshold"]:
                 use_cloud, info["reason"] = True, f"verifier: P(correct) {p:.2f} < {vrule['threshold']:.2f}"
             else:
@@ -339,6 +339,11 @@ def stats():
 
 
 @app.get("/")
+def home():
+    return FileResponse(Path(__file__).parent / "static" / "chat.html")
+
+
+@app.get("/demo")
 def demo_page():
     return FileResponse(Path(__file__).parent / "static" / "index.html")
 

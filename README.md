@@ -184,7 +184,7 @@ uv run python router/compare.py              # one rule vs per-type rules
 uv run python router/code_examples.py        # code: run answers against the question's examples
 uv run python router/realistic.py --hard     # question-type detection
 
-# start the gateway, then open http://127.0.0.1:8000 for the demo page
+# start the gateway, then open http://127.0.0.1:8000 for the chat (/demo for the single-question page)
 # (or /docs to try the raw API)
 uvx hf download Godspirate/qwen3.5-4b-self-verifier --local-dir outputs/verifier_lora   # Stage 3 verifier
 uv run uvicorn gateway.app:app --port 8000
@@ -204,7 +204,8 @@ uv run uvicorn gateway.app:app --port 8000
 | `router/fit_verifier.py` | Scores every answer with the verifier on the Mac and fits each type's threshold |
 | `train/` | Run on an RTX 4060 (WSL2, Unsloth): `gen_data.py` makes labelled answers, `train_verifier.py` / `eval_verifier.py` (Stage 3), `rl_handoff.py` / `rl_eval.py` (Stage 4) |
 | `gateway/app.py` | The API server |
-| `gateway/static/index.html` | Demo page: ask a question, see where it was answered and why |
+| `gateway/static/chat.html` | Chat with memory; each reply shows where it was answered and the verifier's confidence |
+| `gateway/static/index.html` | Single-question demo with full routing details |
 | `results/<task>/` | Raw outputs, signals, chosen rule, chart, per question type |
 
 ## Limitations
