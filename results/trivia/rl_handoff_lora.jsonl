@@ -1,0 +1,146 @@
+{"id": "trivia/qw_1573", "output": "Answer: Emma Hamilton\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/sfq_11719", "output": "The term \"the fourth wall\" refers to an imaginary barrier in a **theater** (or stage) that separates the actors from the audience, creating the illusion that the characters are unaware of being watched.\n\nAnswer: theater\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/sfq_17705", "output": "Answer: John D. Rockefeller\n\n", "handoff": false, "rl_ok": false}
+{"id": "trivia/jp_2475", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/bb_3171", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qw_8611", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qb_2397", "output": "Baloo is a bear.\n\nAnswer: Bear\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/sfq_25587", "output": "Tony Blair's constituency was **Sedgefield**. He represented this constituency in the UK Parliament from 1983 until 2015.\n\nAnswer: Sedgefield\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/qb_495", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/odql_10143", "output": "The 2007 film *300* is a fictionalized retelling of the Battle of Thermopylae.\n\nAnswer: The Battle of Thermopylae\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/tc_543", "output": "Answer: Basketball\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/sfq_9999", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qb_7632", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qw_12256", "output": "Venezuela is located on the northern coast of South America.\n\nAnswer: North\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/odql_13241", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qg_2268", "output": "The first subway system in the United States was opened in 1895 in New York City.\n\nAnswer: New York City\n\n", "handoff": false, "rl_ok": false}
+{"id": "trivia/qb_9452", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/wh_3424", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/odql_6512", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/bb_1342", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/sfq_12868", "output": "The capital of West Germany (the Federal Republic of Germany) from 1949 to 1990 was Bonn.\n\nAnswer: Bonn\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/qg_3894", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/odql_11994", "output": "Bonnie and Clyde were killed in 1934.\n\nAnswer: 1934\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/sfq_8316", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qb_936", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qw_11069", "output": "A querulous person is one who is constantly complaining, grumbling, or expressing dissatisfaction in a petulant or complaining manner.\n\nAnswer: They complain or grumble frequently.\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/qw_8734", "output": "Ivan Galamian was a world-renowned teacher of the cello.\n\nAnswer: cello\n\n", "handoff": false, "rl_ok": false}
+{"id": "trivia/qw_793", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qw_3624", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/sfq_15880", "output": "A hand is equal to 4 inches.\n\nAnswer: 4\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/odql_2213", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/sfq_1387", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/sfq_14798", "output": "The G in GPS stands for **Global**.\n\nAnswer: Global\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/bb_969", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/dpql_49", "output": "Answer: Jordan\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/odql_189", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/bt_4062", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qb_7286", "output": "In the game of Cluedo (also known as Clue), the piece that represents Mrs. Peacock is **green**.\n\nAnswer: green\n\n", "handoff": false, "rl_ok": false}
+{"id": "trivia/odql_13261", "output": "A tetrahedron is a polyhedron with 4 triangular faces. Since each face is a triangle (which has 3 edges) and there are 4 faces, one might initially think there are $4 \\times 3 = 12$ edges. However, each edge is shared by exactly two", "handoff": false, "rl_ok": false}
+{"id": "trivia/qf_787", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/wh_194", "output": "The Japanese car company whose name translates to \"three diamonds\" and features three diamonds in its logo is **Mitsubishi**.\n\nAnswer: Mitsubishi\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/dpql_4756", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/sfq_24487", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/sfq_10042", "output": "The National Railways Museum is located in Crewe, England.\n\nAnswer: Crewe\n\n", "handoff": false, "rl_ok": false}
+{"id": "trivia/qb_8971", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/wh_3113", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/odql_12334", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qz_5202", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/bb_2852", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qw_16330", "output": "Answer: Scott Joplin\n\n", "handoff": false, "rl_ok": false}
+{"id": "trivia/qw_3904", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qg_2075", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qb_4066", "output": "The highest waterfall in the world is Angel Falls, located in Venezuela. It drops 979 meters (3,212 feet) from the Auy\u00e1n-Kipuka mountain.\n\nAnswer: Angel Falls\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/dpql_4895", "output": "Luzon is the largest island of the Philippines.\n\nAnswer: Philippines\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/odql_14378", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/dpql_458", "output": "Pr is the symbol for the chemical element Praseodymium.\n\nAnswer: Praseodymium\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/bb_1522", "output": "The white pinwheel-shaped Tiare flower is the national flower of French Polynesia.\n\nAnswer: French Polynesia\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/bb_1078", "output": "Wolfgang Amadeus Mozart composed the opera *Cos\u00ec fan tutte*.\n\nAnswer: Wolfgang Amadeus Mozart\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/tc_2573", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qb_8465", "output": "Didsbury, Ardwick, and Fallowfield are all areas of the city of Manchester.\n\nAnswer: Manchester\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/bt_2104", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qw_6984", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qb_3697", "output": "Answer: Mexico\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/bb_6297", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qw_5723", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/bt_763", "output": "Che Guevara was Argentine.\n\nAnswer: Argentine\n\n", "handoff": false, "rl_ok": false}
+{"id": "trivia/bb_3854", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/sfq_3948", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/jp_2243", "output": "Answer: Motown\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/tb_1911", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qz_3392", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qf_1507", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/dpql_1872", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/odql_2385", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/sfq_18636", "output": "Alcock and Brown made the first flight across the Atlantic in 1919.\n\nAnswer: 1919\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/sfq_7117", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qb_6594", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/tb_577", "output": "Answer: Barry Lyndon\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/jp_1715", "output": "The Rosetta Stone\n\nAnswer: The Rosetta Stone\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/sfq_5799", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/sfq_7864", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qf_1235", "output": "The number 14 is written as XIV in Roman numerals.\n\nAnswer: XIV\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/sfq_9525", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qw_6676", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/jp_620", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qw_3116", "output": "Checkpoint Charlie was a border crossing between the Soviet-occupied East Berlin and the Western-occupied West Berlin.\n\nAnswer: East Berlin and West Berlin\n\n", "handoff": false, "rl_ok": false}
+{"id": "trivia/qz_3127", "output": "Gjetost is the national cheese of Iceland.\n\nAnswer: Iceland\n\n", "handoff": false, "rl_ok": false}
+{"id": "trivia/qw_14403", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qw_15588", "output": "Henrik Ibsen wrote his plays in Norwegian.\n\nAnswer: Norwegian\n\n", "handoff": false, "rl_ok": false}
+{"id": "trivia/qb_2476", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/sfq_3837", "output": "Under current Olympic rules (and the standard ITTF rules used in professional play), a set is won by the first player to reach **11 points**, provided they lead by at least **2 points**. If the score reaches 10-10, play continues until one player establishes a 2-point lead,", "handoff": false, "rl_ok": false}
+{"id": "trivia/wh_2223", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/sfq_6881", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/odql_11681", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qf_1621", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/sfq_9248", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/sfq_12907", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qb_8316", "output": "Answer: Apple\n\n", "handoff": false, "rl_ok": false}
+{"id": "trivia/qf_1447", "output": "Answer: South Dakota\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/qw_8039", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/odql_2576", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qb_4017", "output": "Ligustrum is the Latin name for the privet shrub.\n\nAnswer: privet\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/dpql_2984", "output": "Kia Motors Corporation is nearly one-third owned by Hyundai Motor Company.\n\nAnswer: Hyundai Motor Company\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/odql_3234", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qw_4266", "output": "Christie, Manson and Woods is a prominent law firm specializing in litigation, corporate law, and intellectual property.\n\nAnswer: Law\n\n", "handoff": false, "rl_ok": false}
+{"id": "trivia/jp_404", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/tb_1069", "output": "The Star Ferry (originally the Kowloon Ferry Company) operates between Hong Kong and the Central District of Hong Kong.\n\nAnswer: Hong Kong\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/qb_5688", "output": "The band that released the 2001 album *Amnesiac* is Radiohead.\n\nAnswer: Radiohead\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/odql_7573", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/sfq_24100", "output": "Answer: Friends\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/jp_1576", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/dpql_2122", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/bt_2137", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qw_6084", "output": "Answer: Apes\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/bb_977", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qw_7446", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qb_10036", "output": "The US President immediately before Benjamin Harrison was **Rutherford B. Hayes**.\nThe US President immediately after Benjamin Harrison was **Grover Cleveland**.\n\nAnswer: Rutherford B. Hayes and Grover Cleveland\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/qf_1414", "output": "Pierce Brosnan appeared in four James Bond films: *GoldenEye* (1994), *Tomorrow Never Dies* (1997), *The World Is Not Enough* (1999), and *Die Another Day* (2002).\n\nAnswer: 4\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/odql_5188", "output": "The slogan \"It's the economy, stupid\" was used by George H. W. Bush during his 1988 presidential campaign.\n\nAnswer: George H. W. Bush\n\n", "handoff": false, "rl_ok": false}
+{"id": "trivia/qw_6561", "output": "Answer: Mercia\n\n", "handoff": false, "rl_ok": false}
+{"id": "trivia/sfq_2414", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/bt_2207", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/sfq_3490", "output": "The rugby league team known as the Rhinos is the **Hull FC** (Hull Kingston Rovers), based in Hull, England. They are one of the most successful clubs in the Super League, having won multiple titles.\n\nAnswer: Hull FC\n\n", "handoff": false, "rl_ok": false}
+{"id": "trivia/sfq_22980", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/sfq_2993", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qg_3753", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/sfq_20452", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qz_6079", "output": "The method of painting that consists of applying pigment to wet plaster is called fresco.\n\nAnswer: fresco\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/dpql_3467", "output": "Answer: Willie Nelson\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/qb_4548", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/odql_9298", "output": "Answer: Volkswagen\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/bb_2117", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/bb_409", "output": "The Earth's Equator is approximately 40,000 kilometers in length, which equals 40 million meters.\n\nAnswer: 40\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/qb_2370", "output": "The Transandine Railway runs between Chile and Argentina.\n\nAnswer: Chile and Argentina\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/bb_6017", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/bb_3629", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qg_1100", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qw_7447", "output": "Answer: Seattle\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/bt_2165", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qw_15057", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/bb_7368", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/dpql_3549", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/odql_1763", "output": "HANDOFF\n", "handoff": true, "rl_ok": false}
+{"id": "trivia/qw_11658", "output": "Answer: New York City\n\n", "handoff": false, "rl_ok": true}
+{"id": "trivia/sfq_20632", "output": "Carl Linnaeus was born in 1707 and died in 1778.\n\nAnswer: 1707\n\n", "handoff": false, "rl_ok": false}
+{"id": "trivia/wh_3858", "output": "Answer: George Orwell\n\n", "handoff": false, "rl_ok": true}

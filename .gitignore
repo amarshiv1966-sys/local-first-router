@@ -15,3 +15,4 @@ logs/
 outputs/
 .venv-gpu/
 outputs/
+unsloth_compiled_cache/
