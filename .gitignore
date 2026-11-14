@@ -11,3 +11,5 @@ logs/
 
 # macOS
 .DS_Store
+.venv-gpu/
+outputs/
