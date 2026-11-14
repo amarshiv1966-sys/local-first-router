@@ -1,0 +1,9 @@
+{
+  "signal": "base",
+  "threshold": 0.5927,
+  "n_test": 142,
+  "test_acc": 0.7535,
+  "test_prec": 0.775,
+  "test_rec": 0.62,
+  "test_handoff": 0.2817
+}
