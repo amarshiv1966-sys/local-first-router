@@ -4,93 +4,154 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Local-first chat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <style>
   :root {
-    --bg: #fafaf9; --panel: #ffffff; --ink: #1c1917; --muted: #78716c; --line: #e7e5e4;
-    --local: #15803d; --local-bg: #dcfce7; --cloud: #1d4ed8; --cloud-bg: #dbeafe; --user-bg: #f5f5f4;
+    --bg: #eef1f4; --side: #e3e8ee; --panel: #ffffff; --ink: #1a2230; --muted: #66717f; --line: #d3dae2;
+    --local: #2f7d5b; --local-soft: #dcefe5; --cloud: #3a64c8; --cloud-soft: #dde6f8; --warn: #b4472e;
+    --code: #f5f7f9;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #1c1917; --panel: #292524; --ink: #f5f5f4; --muted: #a8a29e; --line: #44403c;
-      --local: #86efac; --local-bg: #14532d; --cloud: #93c5fd; --cloud-bg: #1e3a8a; --user-bg: #44403c;
+      --bg: #151a22; --side: #10141b; --panel: #1d2430; --ink: #e6eaf0; --muted: #8e99a8; --line: #2c3544;
+      --local: #6cc49a; --local-soft: #1d3a2e; --cloud: #8aa8f0; --cloud-soft: #233157; --warn: #ef8a6f;
+      --code: #121821;
     }
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; }
-  body { margin: 0; background: var(--bg); color: var(--ink); display: flex;
-         font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-  aside { width: 240px; border-right: 1px solid var(--line); padding: 16px 10px; overflow-y: auto; flex-shrink: 0; }
-  aside button { width: 100%; margin-bottom: 12px; }
-  .conv { padding: 8px 10px; border-radius: 8px; cursor: pointer; color: var(--muted);
-          white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px; }
-  .conv:hover { background: var(--user-bg); }
-  .conv.active { background: var(--user-bg); color: var(--ink); font-weight: 600; }
-  .conv { display: flex; align-items: center; gap: 4px; }
-  .conv span { flex: 1; overflow: hidden; text-overflow: ellipsis; }
-  .conv .del { border: none; background: none; padding: 0 4px; color: var(--muted); cursor: pointer;
-               width: auto; margin: 0; visibility: hidden; font-size: 16px; line-height: 1; }
-  .conv:hover .del { visibility: visible; }
-  .conv .del:hover { color: #dc2626; }
+  body { margin: 0; display: flex; background: var(--bg); color: var(--ink);
+         font: 15.5px/1.6 "Instrument Sans", -apple-system, sans-serif; }
+  button, select, textarea { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--cloud); outline-offset: 2px; }
+
+  /* sidebar */
+  aside { width: 264px; flex-shrink: 0; background: var(--side); display: flex; flex-direction: column;
+          padding: 18px 12px; gap: 14px; }
+  .brand { padding: 0 8px; }
+  .brand b { display: block; font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+  .brand small { color: var(--muted); font-size: 13px; line-height: 1.4; display: block; margin-top: 2px; }
+  .new { border: 1px solid var(--line); background: var(--panel); border-radius: 10px; padding: 9px 12px;
+         text-align: left; cursor: pointer; font-weight: 500; }
+  .new:hover { border-color: var(--muted); }
+  #convs { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+  .conv { display: flex; align-items: center; border-radius: 8px; padding: 7px 8px 7px 10px; cursor: pointer;
+          color: var(--muted); font-size: 14px; }
+  .conv span { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .conv:hover { background: var(--bg); color: var(--ink); }
+  .conv.active { background: var(--panel); color: var(--ink); font-weight: 500; }
+  .del { border: none; background: none; cursor: pointer; color: var(--muted); padding: 0 4px;
+         font-size: 17px; line-height: 1; opacity: 0; }
+  .conv:hover .del, .del:focus-visible { opacity: 1; }
+  .del:hover { color: var(--warn); }
+  .legend { font-size: 12.5px; color: var(--muted); padding: 0 8px; display: grid; gap: 4px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 7px; vertical-align: -1px; }
+  .legend a { color: var(--muted); }
+
+  /* conversation */
   main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-  #log { flex: 1; overflow-y: auto; padding: 24px 16px; }
-  .wrap { max-width: 760px; margin: 0 auto; }
-  .msg { margin-bottom: 18px; }
-  .user .bubble { background: var(--user-bg); border-radius: 12px; padding: 10px 14px;
-                  margin-left: auto; max-width: 85%; width: fit-content; white-space: pre-wrap; }
-  .assistant .bubble { white-space: pre-wrap; overflow-x: auto; }
-  .meta { font-size: 13px; color: var(--muted); margin-top: 6px; }
-  .badge { display: inline-block; font-weight: 600; font-size: 12px; padding: 1px 9px; border-radius: 99px; margin-right: 6px; }
-  .local { color: var(--local); background: var(--local-bg); }
-  .cloud { color: var(--cloud); background: var(--cloud-bg); }
-  form { border-top: 1px solid var(--line); padding: 12px 16px; }
-  .bar { display: flex; gap: 8px; align-items: flex-end; }
-  textarea { flex: 1; min-height: 46px; max-height: 200px; padding: 11px 12px; border: 1px solid var(--line);
-             border-radius: 10px; background: var(--panel); color: var(--ink); font: inherit; resize: vertical; }
-  select, button { font: inherit; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line);
-                   background: var(--panel); color: var(--ink); }
-  button.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); cursor: pointer; }
-  button:disabled { opacity: .5; cursor: wait; }
-  .opts { display: flex; gap: 8px; margin-top: 8px; font-size: 13px; color: var(--muted); align-items: center; flex-wrap: wrap; }
-  .opts select { padding: 4px 8px; font-size: 13px; }
-  pre { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px;
-        overflow-x: auto; white-space: pre; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
-  .empty { color: var(--muted); text-align: center; margin-top: 18vh; }
-  a { color: inherit; }
-  @media (max-width: 700px) { aside { display: none; } }
+  #log { flex: 1; overflow-y: auto; padding: 32px 20px 12px; }
+  .col { max-width: 740px; margin: 0 auto; }
+  .turn { margin-bottom: 26px; }
+  .you { display: flex; justify-content: flex-end; }
+  .you p { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 14px 14px 4px 14px;
+           padding: 10px 15px; max-width: 80%; white-space: pre-wrap; }
+
+  /* the signature: every reply sits on a rail coloured by where it was answered */
+  .reply { display: grid; grid-template-columns: 4px 1fr; gap: 0 16px; }
+  .rail { border-radius: 4px; background: var(--line); }
+  .reply.local .rail { background: var(--local); }
+  .reply.cloud .rail { background: var(--cloud); }
+  .head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+  .where { font-weight: 600; font-size: 13.5px; }
+  .local .where { color: var(--local); }
+  .cloud .where { color: var(--cloud); }
+  .body { white-space: pre-wrap; overflow-x: auto; }
+  .body pre { white-space: pre; background: var(--code); border: 1px solid var(--line); border-radius: 8px;
+              padding: 12px 14px; font: 13px/1.55 "JetBrains Mono", ui-monospace, monospace; overflow-x: auto; margin: 8px 0; }
+  .body code { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 0.9em; }
+  .why > span { display: inline-flex; align-items: center; gap: 8px; }
+  .why { margin-top: 10px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+
+  /* confidence meter: the verifier's P(correct), with a tick at the handoff threshold */
+  .meter { display: inline-block; vertical-align: middle; position: relative; width: 132px; height: 6px; border-radius: 3px; background: var(--line); }
+  .meter b { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: var(--local); }
+  .cloud .meter b { background: var(--warn); }
+  .meter s { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--ink); border-radius: 1px; }
+  .thinking .body { color: var(--muted); }
+  .thinking .rail { animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .35; } }
+  @media (prefers-reduced-motion: reduce) { .thinking .rail { animation: none; } }
+
+  .empty { margin-top: 16vh; }
+  .empty h1 { font-size: 30px; line-height: 1.2; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 10px; max-width: 18ch; }
+  .empty p { color: var(--muted); margin: 0 0 22px; max-width: 56ch; }
+  .tries { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tries button { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 6px 14px;
+                  cursor: pointer; font-size: 14px; }
+  .tries button:hover { border-color: var(--muted); }
+
+  /* composer */
+  form { padding: 10px 20px 18px; }
+  .box { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 10px 10px 8px 14px; }
+  .box:focus-within { border-color: var(--muted); }
+  textarea { width: 100%; border: none; background: none; resize: none; outline: none; min-height: 26px;
+             max-height: 220px; padding: 4px 0; line-height: 1.5; }
+  .controls { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+  .controls select { border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 4px 8px; font-size: 13px; }
+  #status { color: var(--muted); font-size: 13px; flex: 1; }
+  #send { border: none; border-radius: 10px; background: var(--ink); color: var(--bg); padding: 7px 16px;
+          font-weight: 600; cursor: pointer; }
+  #send:disabled { opacity: .4; cursor: default; }
+
+  @media (max-width: 760px) {
+    aside { display: none; }
+    #log { padding: 20px 16px 8px; }
+    form { padding: 8px 16px 14px; }
+    .controls { flex-wrap: wrap; }
+  }
 </style>
 </head>
 <body>
 <aside>
-  <button class="primary" id="new">+ New chat</button>
+  <div class="brand">
+    <b>Local-first chat</b>
+    <small>Qwen 3.5 4B on this Mac, gpt-oss-120b in the cloud when it's likely wrong</small>
+  </div>
+  <button class="new" id="new">New chat</button>
   <div id="convs"></div>
+  <div class="legend">
+    <span><i style="background:var(--local)"></i>Answered on this laptop</span>
+    <span><i style="background:var(--cloud)"></i>Handed off to the cloud</span>
+    <a href="/demo">Single-question demo</a>
+  </div>
 </aside>
 <main>
-  <div id="log"><div class="wrap" id="msgs"></div></div>
+  <div id="log"><div class="col" id="msgs"></div></div>
   <form id="form">
-    <div class="wrap">
-      <div class="bar">
-        <textarea id="q" placeholder="Message… (Enter to send, Shift+Enter for a new line)"></textarea>
-        <button class="primary" id="send">Send</button>
-      </div>
-      <div class="opts">
-        <select id="mode" aria-label="Routing">
+    <div class="col box">
+      <textarea id="q" rows="1" placeholder="Ask anything" aria-label="Message"></textarea>
+      <div class="controls">
+        <select id="mode" aria-label="Where to answer">
           <option value="auto">Router decides</option>
           <option value="local">Local only</option>
           <option value="cloud">Cloud only</option>
         </select>
         <select id="task" aria-label="Question type">
-          <option value="auto">Auto-detect type</option>
+          <option value="auto">Detect type</option>
           <option value="general">General</option>
           <option value="math">Math</option>
           <option value="code">Code</option>
           <option value="mmlu">Multiple choice</option>
           <option value="trivia">Fact</option>
         </select>
-        <span id="status"></span>
-        <a href="/" style="margin-left:auto">single-question demo</a>
+        <span id="status" aria-live="polite"></span>
+        <button id="send" type="submit">Send</button>
       </div>
     </div>
   </form>
@@ -98,89 +159,135 @@
 <script>
 const $ = id => document.getElementById(id);
 let current = null;
+const TYPES = { math: "math", mmlu: "multiple choice", trivia: "fact", code: "code", general: "general" };
 
-const esc = s => s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
-const withCode = s => esc(s).replace(/\n*```[a-zA-Z]*\n?([\s\S]*?)```\n*/g, (_, c) => `<pre><code>${c.trimEnd()}</code></pre>`);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const render = s => esc(s)
+  .replace(/\n*```[a-zA-Z]*\n?([\s\S]*?)```\n*/g, (_, c) => `<pre><code>${c.trimEnd()}</code></pre>`)
+  .replace(/`([^`\n]+)`/g, "<code>$1</code>")
+  .replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>");
 
-function meta(r) {
+function why(r) {
   if (!r) return "";
-  const where = r.route === "local" ? "Local 4B" : "Cloud 120B";
-  const bits = [r.reason, r.task && `type: ${r.task}`, r.latency_s != null && `${r.latency_s} s`,
-                r.cost_usd ? `$${r.cost_usd.toFixed(6)}` : null, r.cached && "from cache"].filter(Boolean);
-  return `<div class="meta"><span class="badge ${r.route}">${where}</span>${esc(bits.join(" · "))}</div>`;
+  const parts = [];
+  if (r.p_correct != null) {
+    const pct = Math.round(r.p_correct * 100), th = Math.round((r.threshold ?? 0) * 100);
+    parts.push(`<span title="Verifier: how sure the local model is that its answer is right. The tick is the handoff line.">
+      <span class="meter"><b style="width:${pct}%"></b>${r.threshold != null ? `<s style="left:${th}%"></s>` : ""}</span></span>
+      <span>${pct}% sure${r.threshold != null ? `, hands off below ${th}%` : ""}</span>`);
+  } else if (r.reason) {
+    parts.push(`<span>${esc(r.reason)}</span>`);
+  }
+  if (r.latency_s != null) parts.push(`<span>${r.latency_s} s</span>`);
+  parts.push(`<span>${r.cost_usd ? "$" + r.cost_usd.toFixed(5) : "free"}</span>`);
+  return `<div class="why">${parts.join("")}</div>`;
 }
 
-function add(role, text, router) {
+function addYou(text) {
   $("msgs").querySelector(".empty")?.remove();
-  const div = document.createElement("div");
-  div.className = `msg ${role}`;
-  div.innerHTML = `<div class="bubble">${role === "assistant" ? withCode(text) : esc(text)}</div>${meta(router)}`;
-  $("msgs").appendChild(div);
-  if (role === "assistant" && window.renderMathInElement) {
-    renderMathInElement(div, { delimiters: [
-      { left: "$$", right: "$$", display: true }, { left: "\\[", right: "\\]", display: true },
-      { left: "$", right: "$", display: false }, { left: "\\(", right: "\\)", display: false }],
-      throwOnError: false });
-  }
-  $("log").scrollTop = $("log").scrollHeight;
-  return div;
+  const d = document.createElement("div");
+  d.className = "turn you";
+  d.innerHTML = `<p>${esc(text)}</p>`;
+  $("msgs").appendChild(d);
+  scroll();
 }
+
+function addReply(text, r, thinking = false) {
+  $("msgs").querySelector(".empty")?.remove();
+  const d = document.createElement("div");
+  const route = r?.route || "";
+  d.className = `turn reply ${route}${thinking ? " thinking" : ""}`;
+  const where = thinking ? "Answering on this laptop…" : route === "local" ? "Answered on this laptop" : "Answered in the cloud";
+  const type = r?.task ? `<span>${esc(TYPES[r.task] || r.task)}</span>` : "";
+  const handoff = route === "cloud" && r?.reason && r.p_correct == null ? "" : "";
+  d.innerHTML = `<div class="rail"></div><div>
+      <div class="head"><span class="where">${where}</span>${type}</div>
+      <div class="body">${thinking ? "The 4B model is writing; if it looks unsure, the cloud model takes over." : render(text)}</div>
+      ${thinking ? "" : why(r)}${handoff}</div>`;
+  $("msgs").appendChild(d);
+  if (!thinking && window.renderMathInElement) {
+    renderMathInElement(d, { delimiters: [
+      { left: "$$", right: "$$", display: true }, { left: "\\[", right: "\\]", display: true },
+      { left: "$", right: "$", display: false }, { left: "\\(", right: "\\)", display: false }], throwOnError: false });
+  }
+  scroll();
+  return d;
+}
+
+const scroll = () => { $("log").scrollTop = $("log").scrollHeight; };
 
 function empty() {
-  $("msgs").innerHTML = `<div class="empty">Start a conversation. A 4B model answers on this laptop;
-    the router hands off to the 120B cloud model when it judges the local answer likely wrong.</div>`;
+  $("msgs").innerHTML = `<div class="empty">
+    <h1>Answers from your laptop first.</h1>
+    <p>A 4B model replies on this Mac. After each answer it checks its own work, and if it thinks it's wrong,
+       a 120B model in the cloud answers instead. The bar under each reply shows how sure it was.</p>
+    <div class="tries">
+      <button>What is the sum of the first 50 odd numbers?</button>
+      <button>Who wrote Pride and Prejudice?</button>
+      <button>Write a Python function that checks if a string is a palindrome.</button>
+      <button>How many positive divisors of 2^10 · 3^5 · 5^3 are perfect squares?</button>
+    </div></div>`;
+  document.querySelectorAll(".tries button").forEach(b => b.onclick = () => { $("q").value = b.textContent; send(); });
 }
 
 async function loadConvs() {
   const list = await (await fetch("/api/conversations")).json();
-  $("convs").innerHTML = list.map(c =>
-    `<div class="conv ${c.id === current ? "active" : ""}" data-id="${c.id}" title="${esc(c.title)}">
-       <span>${esc(c.title)}</span><button class="del" aria-label="Delete chat" title="Delete chat">×</button></div>`).join("");
+  $("convs").innerHTML = list.map(c => `<div class="conv ${c.id === current ? "active" : ""}" data-id="${c.id}" tabindex="0">
+      <span title="${esc(c.title)}">${esc(c.title)}</span>
+      <button class="del" aria-label="Delete chat" title="Delete chat">×</button></div>`).join("");
   document.querySelectorAll(".conv").forEach(el => {
-    el.onclick = () => open_(+el.dataset.id);
+    const id = +el.dataset.id;
+    el.onclick = () => openConv(id);
+    el.onkeydown = e => { if (e.key === "Enter") openConv(id); };
     el.querySelector(".del").onclick = async e => {
       e.stopPropagation();
-      if (!confirm("Delete this chat?")) return;
-      await fetch(`/api/conversations/${el.dataset.id}`, { method: "DELETE" });
-      if (current === +el.dataset.id) { current = null; empty(); }
+      if (!confirm("Delete this chat? This can't be undone.")) return;
+      await fetch(`/api/conversations/${id}`, { method: "DELETE" });
+      if (current === id) { current = null; empty(); }
       loadConvs();
     };
   });
 }
 
-async function open_(id) {
+async function openConv(id) {
   current = id;
   const c = await (await fetch(`/api/conversations/${id}`)).json();
   $("msgs").innerHTML = "";
-  c.messages.forEach(m => add(m.role, m.content, m.router));
+  c.messages.forEach(m => m.role === "user" ? addYou(m.content) : addReply(m.content, m.router));
+  if (!c.messages.length) empty();
   loadConvs();
 }
 
 async function send(e) {
   e?.preventDefault();
   const text = $("q").value.trim();
-  if (!text) return;
-  $("q").value = "";
-  add("user", text);
-  const pending = add("assistant", "…");
+  if (!text || $("send").disabled) return;
+  $("q").value = ""; grow();
+  addYou(text);
+  const pending = addReply("", null, true);
   $("send").disabled = true;
-  $("status").textContent = "thinking (local answers take 5–60 s)";
   try {
     const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text, conversation_id: current, model: $("mode").value, task: $("task").value }) });
-    if (!res.ok) throw new Error(`server returned ${res.status}`);
+    if (!res.ok) throw new Error(`The server returned ${res.status}. Check the terminal running uvicorn.`);
     const out = await res.json();
     pending.remove();
-    add("assistant", out.reply, out.router);
+    addReply(out.reply, out.router);
     if (current !== out.conversation_id) { current = out.conversation_id; loadConvs(); }
   } catch (err) {
-    pending.querySelector(".bubble").textContent = `Request failed: ${err.message}`;
+    pending.classList.remove("thinking");
+    pending.querySelector(".where").textContent = "Not answered";
+    pending.querySelector(".body").textContent = err.message.includes("fetch")
+      ? "Can't reach the server. Start it with: uv run uvicorn gateway.app:app --port 8000" : err.message;
   }
   $("send").disabled = false;
-  $("status").textContent = "";
+  $("q").focus();
 }
 
+function grow() { const t = $("q"); t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 220) + "px"; }
+
 $("form").addEventListener("submit", send);
+$("q").addEventListener("input", grow);
 $("q").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) send(e); });
 $("new").onclick = () => { current = null; empty(); loadConvs(); $("q").focus(); };
 empty();
