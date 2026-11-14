@@ -5,6 +5,9 @@ Run (from src/llm_project):
 
 Endpoints:
     GET  /                      demo page: ask a question, see where it was answered and why
+    GET  /chat                  chat page: conversations with memory, every reply still routed
+    POST /api/chat              send a message in a conversation (history is kept in SQLite)
+    GET  /api/conversations     list conversations; /api/conversations/{id} for one (DELETE removes it)
     POST /v1/chat/completions   OpenAI-style request -> answer + routing info
     GET  /stats                 totals: % local, cloud spend, money saved
     GET  /health                is the server up?
@@ -86,6 +89,9 @@ cloud = OpenAI(base_url=GROQ_URL, api_key=os.environ["GROQ_API_KEY"])
 
 db = sqlite3.connect(LOG_DIR / "cache.db", check_same_thread=False)
 db.execute("CREATE TABLE IF NOT EXISTS cache (key TEXT PRIMARY KEY, response TEXT)")
+db.execute("CREATE TABLE IF NOT EXISTS conversations (id INTEGER PRIMARY KEY, title TEXT, created REAL)")
+db.execute("""CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY, conversation INTEGER,
+              role TEXT, content TEXT, router TEXT, created REAL)""")
 db_lock = threading.Lock()
 
 app = FastAPI(title="Local-first LLM router")
@@ -155,17 +161,21 @@ def run_cloud(messages):
 
 @app.post("/v1/chat/completions")
 def chat(req: ChatRequest):
-    messages = [m.model_dump() for m in req.messages]
-    if req.task == "auto":
+    return route([m.model_dump() for m in req.messages], req.task, req.model)
+
+
+def route(messages, task_req="auto", mode="auto"):
+    """The whole router: detect the type, answer locally, check, hand off if needed."""
+    if task_req == "auto":
         task, how = detect_type(messages[-1]["content"])
     else:
-        task, how = (req.task if req.task in SYSTEMS else "general"), "given"
+        task, how = (task_req if task_req in SYSTEMS else "general"), "given"
     if messages[0]["role"] != "system":
         messages.insert(0, {"role": "system", "content": SYSTEMS[task]})
     rule = RULES.get(task, RULES[FALLBACK_RULE])
     cap, min_lp = rule["cap_tokens"], rule["min_logprob"]      # min_lp None = no probability check
 
-    key = hashlib.sha256(json.dumps([req.model, messages]).encode()).hexdigest()
+    key = hashlib.sha256(json.dumps([mode, messages]).encode()).hexdigest()
     with db_lock:
         hit = db.execute("SELECT response FROM cache WHERE key = ?", (key,)).fetchone()
     if hit:
@@ -177,7 +187,7 @@ def chat(req: ChatRequest):
     t0 = time.time()
     info = {"cached": False, "task": task, "task_source": how, "local_tokens": 0, "cost_usd": 0.0}
 
-    use_cloud = req.model == "cloud"
+    use_cloud = mode == "cloud"
     if not use_cloud:
         # code: no early stop, the answer gets run against the question's own examples instead
         examples_ok, vrule = None, VRULES.get(task) if lora_layers else None
@@ -185,12 +195,12 @@ def chat(req: ChatRequest):
             # no early stop: the finished answer gets checked (examples run, or the verifier asked)
             text, n, worst, _ = run_local(messages, MAX_TOKENS)
             gave_up = n > cap
-            if task == "code" and req.model != "local":
+            if task == "code" and mode != "local":
                 examples_ok = check_examples(text, messages[-1]["content"])
         else:
             text, n, worst, gave_up = run_local(messages, cap)
         info.update(local_tokens=n, worst_logprob=round(worst, 3))
-        if req.model == "local":
+        if mode == "local":
             info.update(route="local", reason="forced local")
         elif examples_ok is False:
             use_cloud, info["reason"] = True, "local code failed the examples in the question"
@@ -229,6 +239,79 @@ def chat(req: ChatRequest):
         db.commit()
     log(info)
     return out
+
+
+# ---------- chat: conversations with memory ----------
+
+HISTORY_TOKENS = 6000      # older turns are dropped so the 4B model's prompt stays fast
+
+
+class ChatTurn(BaseModel):
+    text: str
+    conversation_id: int | None = None
+    model: str = "auto"
+    task: str = "auto"
+
+
+def history(conv):
+    with db_lock:
+        rows = db.execute("SELECT role, content, router FROM messages WHERE conversation = ? ORDER BY id",
+                          (conv,)).fetchall()
+    return [{"role": r, "content": c, "router": json.loads(x) if x else None} for r, c, x in rows]
+
+
+@app.post("/api/chat")
+def chat_turn(turn: ChatTurn):
+    now = time.time()
+    conv = turn.conversation_id
+    if conv is None:
+        with db_lock:
+            conv = db.execute("INSERT INTO conversations (title, created) VALUES (?, ?)",
+                              (turn.text[:60], now)).lastrowid
+            db.commit()
+    # earlier turns, newest kept first until the token budget runs out
+    past, budget = [], HISTORY_TOKENS - len(tokenizer.encode(turn.text))
+    for m in reversed(history(conv)):
+        budget -= len(tokenizer.encode(m["content"]))
+        if budget < 0:
+            break
+        past.insert(0, {"role": m["role"], "content": m["content"]})
+    out = route(past + [{"role": "user", "content": turn.text}], turn.task, turn.model)
+    reply = out["choices"][0]["message"]["content"]
+    with db_lock:
+        db.execute("INSERT INTO messages (conversation, role, content, router, created) VALUES (?,?,?,?,?)",
+                   (conv, "user", turn.text, None, now))
+        db.execute("INSERT INTO messages (conversation, role, content, router, created) VALUES (?,?,?,?,?)",
+                   (conv, "assistant", reply, json.dumps(out["router"]), time.time()))
+        db.commit()
+    return {"conversation_id": conv, "reply": reply, "router": out["router"],
+            "history_turns_used": len(past) // 2}
+
+
+@app.get("/api/conversations")
+def conversations():
+    with db_lock:
+        rows = db.execute("SELECT id, title, created FROM conversations ORDER BY created DESC").fetchall()
+    return [{"id": i, "title": t, "created": c} for i, t, c in rows]
+
+
+@app.get("/api/conversations/{conv}")
+def conversation(conv: int):
+    return {"id": conv, "messages": history(conv)}
+
+
+@app.delete("/api/conversations/{conv}")
+def delete_conversation(conv: int):
+    with db_lock:
+        db.execute("DELETE FROM messages WHERE conversation = ?", (conv,))
+        db.execute("DELETE FROM conversations WHERE id = ?", (conv,))
+        db.commit()
+    return {"deleted": conv}
+
+
+@app.get("/chat")
+def chat_page():
+    return FileResponse(Path(__file__).parent / "static" / "chat.html")
 
 
 def log(info):
